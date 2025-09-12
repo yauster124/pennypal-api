@@ -1,0 +1,71 @@
+package com.dorsetsoftware.PennyPal.expense.controller;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.dorsetsoftware.PennyPal.category.dto.CategoryExpenseSummaryDto;
+import com.dorsetsoftware.PennyPal.expense.dto.ExpenseCreateDto;
+import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
+import com.dorsetsoftware.PennyPal.expense.dto.ExpenseUpdateDto;
+import com.dorsetsoftware.PennyPal.expense.service.ExpenseService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+@RestController
+@RequestMapping("/api/expenses")
+public class ExpenseController {
+    private final ExpenseService expenseService;
+
+    public ExpenseController(ExpenseService expenseService) {
+        this.expenseService = expenseService;
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<ExpenseDto>> getRecentExpenses(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) List<Long> accountIds) {
+        List<ExpenseDto> expenses = expenseService.getRecentExpensesForUser(userDetails.getUsername(), accountIds);
+
+        return ResponseEntity.ok(expenses);
+    }
+
+    @GetMapping("/category-totals")
+    public ResponseEntity<List<CategoryExpenseSummaryDto>> getCategoryTotals(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) List<Long> accountIds) {
+        List<CategoryExpenseSummaryDto> totals = expenseService
+                .getCategoryTotalsForUserLast30Days(userDetails.getUsername(), accountIds);
+
+        return ResponseEntity.ok(totals);
+    }
+
+    @PostMapping
+    public ResponseEntity<ExpenseDto> createExpense(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ExpenseCreateDto dto) {
+        return ResponseEntity.ok(expenseService.createExpense(dto, userDetails.getUsername()));
+    }
+
+    @PutMapping("/{expenseId}")
+    public ResponseEntity<ExpenseDto> updateExpense(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long expenseId,
+            @RequestBody ExpenseUpdateDto dto) {
+        return ResponseEntity.ok(expenseService.updateExpense(expenseId, dto));
+    }
+
+    @DeleteMapping("/{expenseId}")
+    public ResponseEntity<Boolean> deleteExpense(@PathVariable Long expenseId) {
+        return ResponseEntity.ok(expenseService.deleteExpense(expenseId));
+    }
+}
