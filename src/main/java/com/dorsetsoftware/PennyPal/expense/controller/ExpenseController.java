@@ -1,7 +1,13 @@
 package com.dorsetsoftware.PennyPal.expense.controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +36,26 @@ public class ExpenseController {
         this.expenseService = expenseService;
     }
 
+    @GetMapping
+    public Page<ExpenseDto> getExpenses(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Pageable pageable) {
+        return expenseService.getExpenses(userDetails.getUsername(), startDate, endDate, pageable);
+    }
+
+    @GetMapping("/total")
+    public ResponseEntity<Map<String, BigDecimal>> getTotal(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) List<Long> accountIds) {
+        BigDecimal total = expenseService.getTotalAmount(userDetails.getUsername(), startDate, endDate, accountIds);
+        System.out.println(String.format("startDate: %s", startDate));
+        return ResponseEntity.ok(Map.of("total", total));
+    }
+
     @GetMapping("/recent")
     public ResponseEntity<List<ExpenseDto>> getRecentExpenses(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -42,9 +68,10 @@ public class ExpenseController {
     @GetMapping("/category-totals")
     public ResponseEntity<List<CategoryExpenseSummaryDto>> getCategoryTotals(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) List<Long> accountIds) {
         List<CategoryExpenseSummaryDto> totals = expenseService
-                .getCategoryTotalsForUserLast30Days(userDetails.getUsername(), accountIds);
+                .getCategoryTotalsForUser(userDetails.getUsername(), startDate, accountIds);
 
         return ResponseEntity.ok(totals);
     }
