@@ -48,9 +48,9 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/refresh")
+                .secure(false)
+                .sameSite("Lax")
+                .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -87,6 +87,7 @@ public class AuthController {
         if (jwtUtils.validateJwtToken(refreshToken)) {
             String username = jwtUtils.getUsernameFromToken(refreshToken);
             String newAccessToken = jwtUtils.generateToken(username);
+            
             return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

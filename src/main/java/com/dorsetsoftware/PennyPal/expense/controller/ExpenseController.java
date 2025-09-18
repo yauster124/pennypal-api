@@ -52,7 +52,6 @@ public class ExpenseController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) List<Long> accountIds) {
         BigDecimal total = expenseService.getTotalAmount(userDetails.getUsername(), startDate, endDate, accountIds);
-        System.out.println(String.format("startDate: %s", startDate));
         return ResponseEntity.ok(Map.of("total", total));
     }
 
@@ -80,6 +79,7 @@ public class ExpenseController {
     public ResponseEntity<ExpenseDto> createExpense(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ExpenseCreateDto dto) {
+        System.out.println(dto.getDate());
         return ResponseEntity.ok(expenseService.createExpense(dto, userDetails.getUsername()));
     }
 
