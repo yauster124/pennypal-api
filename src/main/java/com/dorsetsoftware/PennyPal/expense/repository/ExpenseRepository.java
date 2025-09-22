@@ -20,8 +20,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
                 WHERE e.user = :user
                     AND (:searchQuery IS NULL OR LOWER(e.name) LIKE :searchQuery)
                     AND (:categoryIds IS NULL OR e.category.id IN :categoryIds OR e.category.parent.id IN :categoryIds)
-                    AND (:startDate IS NULL OR e.date >= :startDate)
-                    AND (:endDate IS NULL OR e.date <= :endDate)
+                    AND (TRUE = :#{#startDate == null} or e.date >= :startDate)
+                    AND (TRUE = :#{#endDate == null} or e.date <= :endDate)
             """)
     Page<Expense> findByUserAndOptionalDateRange(
             @Param("user") User user,
