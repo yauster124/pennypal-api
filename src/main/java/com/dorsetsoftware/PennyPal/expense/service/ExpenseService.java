@@ -43,12 +43,19 @@ public class ExpenseService {
 
     public Page<ExpenseDto> getExpenses(
             String username,
+            String searchQuery,
+            List<Long> categoryIds,
             LocalDate startDate,
             LocalDate endDate,
             Pageable pageable) {
         User user = userRepository.findByUsername(username);
+        String safeSearchQuery = (searchQuery == null || searchQuery.isBlank())
+                ? null
+                : "%" + searchQuery.toLowerCase() + "%";
         Page<Expense> expenses = expenseRepository.findByUserAndOptionalDateRange(
                 user,
+                safeSearchQuery,
+                categoryIds,
                 startDate,
                 endDate,
                 pageable);
@@ -107,7 +114,7 @@ public class ExpenseService {
 
         account.updateBalance(amount);
         accountRepository.save(account);
-        accountValueService.snapshotAllAccounts(user.getId());
+        accountValueService.snapshotAllAccounts(user.getId(), dto.getDate());
 
         Expense expense = new Expense(
                 dto.getName(),
@@ -149,7 +156,7 @@ public class ExpenseService {
             account.updateBalance(amountDifference);
             accountRepository.save(account);
         }
-        accountValueService.snapshotAllAccounts(expense.getUser().getId());
+        accountValueService.snapshotAllAccounts(expense.getUser().getId(), dto.getDate());
 
         expense.setName(dto.getName());
         expense.setAmount(amount);

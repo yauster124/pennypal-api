@@ -15,5 +15,7 @@ import com.dorsetsoftware.PennyPal.user.entity.User;
 public interface AccountValueRepository extends JpaRepository<AccountValue, Long> {
     Optional<AccountValue> findByAccountAndDate(Account account, LocalDate date);
 
-    List<AccountValue> findByAccountUserAndDateGreaterThanEqual(User user, LocalDate date);
+    List<AccountValue> findByAccountUserUsernameAndDateGreaterThanEqualOrderByDateAsc(String username, LocalDate date);
+
+    AccountValue findFirstByAccountUserUsernameOrderByDateAsc(String username);
 }

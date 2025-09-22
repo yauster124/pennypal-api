@@ -2,7 +2,9 @@ package com.dorsetsoftware.PennyPal.accountvalue.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,40 +35,75 @@ public class AccountValueService {
     private UserRepository userRepository;
 
     @Transactional
-    public void snapshotAllAccounts(Long userId) {
+    public void snapshotAllAccounts(Long userId, LocalDate date) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        LocalDate today = LocalDate.now();
 
         List<Account> accounts = accountRepository.findByUser(user);
 
         for (Account account : accounts) {
-            Optional<AccountValue> existing = accountValueRepository.findByAccountAndDate(account, today);
+            Optional<AccountValue> existing = accountValueRepository.findByAccountAndDate(account, date);
             if (existing.isPresent()) {
                 existing.get().setValue(account.getBalance());
             } else {
                 AccountValue av = new AccountValue();
                 av.setAccount(account);
                 av.setValue(account.getBalance());
-                av.setDate(today);
+                av.setDate(date);
                 accountValueRepository.save(av);
             }
         }
     }
 
     public Map<String, List<AccountValuePoint>> getAccountValuesWithTotal(String username, LocalDate startDate) {
-        User user = userRepository.findByUsername(username);
-        LocalDate effectiveStart = (startDate != null) ? startDate : LocalDate.of(1970, 1, 1);
-        List<AccountValue> values = accountValueRepository
-                .findByAccountUserAndDateGreaterThanEqual(user, effectiveStart);
+        AccountValue earliestAccountValue = accountValueRepository.findFirstByAccountUserUsernameOrderByDateAsc(username);
+        if (earliestAccountValue == null) {
+            return new HashMap<>();
+        }
 
-        // Group by account name
+        LocalDate earliestAccountValueDate = earliestAccountValue.getDate();
+        LocalDate effectiveStart;
+        if (startDate != null) {
+            effectiveStart = earliestAccountValueDate.isBefore(startDate) ? earliestAccountValueDate : startDate;
+        } else {
+            effectiveStart = earliestAccountValueDate;
+        }
+
+        List<AccountValue> values = accountValueRepository
+                .findByAccountUserUsernameAndDateGreaterThanEqualOrderByDateAsc(username, effectiveStart);
+
         Map<String, List<AccountValuePoint>> result = values.stream()
                 .collect(Collectors.groupingBy(
                         av -> av.getAccount().getName(),
                         Collectors.mapping(
                                 av -> new AccountValuePoint(av.getDate(), av.getValue()),
                                 Collectors.toList())));
+
+        Map<String, List<AccountValuePoint>> accountValueMap = new HashMap<>();
+        for (Map.Entry<String, List<AccountValuePoint>> entry : result.entrySet()) {
+            String account = entry.getKey();
+            List<AccountValuePoint> rawAccountValues = entry.getValue();
+            List<AccountValuePoint> newAccountValues = new ArrayList<>();
+
+            for (int i = 0; i < rawAccountValues.size(); i++) {
+                AccountValuePoint accountValuePoint = rawAccountValues.get(i);
+                BigDecimal value = accountValuePoint.getValue();
+
+                LocalDate rangeStartDate = accountValuePoint.getDate();
+                LocalDate rangeEndDate;
+                if (i < rawAccountValues.size() - 1) {
+                    rangeEndDate = rawAccountValues.get(i + 1).getDate();
+                } else {
+                    rangeEndDate = LocalDate.now().plusDays(1);
+                }
+
+                for (LocalDate date : rangeStartDate.datesUntil(rangeEndDate).toList()) {
+                    newAccountValues.add(new AccountValuePoint(date, value));
+                }
+            }
+
+            accountValueMap.put(account, newAccountValues);
+        }
 
         // Build totals by date
         Map<LocalDate, BigDecimal> totalsByDate = values.stream()
@@ -82,13 +119,26 @@ public class AccountValueService {
                 .sorted(Comparator.comparing(AccountValuePoint::getDate))
                 .collect(Collectors.toList());
 
-        result.put("TOTAL", totalSeries);
+        List<AccountValuePoint> totalsList = new ArrayList<>();
+        for (int i = 0; i < totalSeries.size(); i++) {
+            AccountValuePoint accountValuePoint = totalSeries.get(i);
+            BigDecimal value = accountValuePoint.getValue();
 
-        // Sort each account’s list by date too
-        result.replaceAll((_, v) -> v.stream()
-                .sorted(Comparator.comparing(AccountValuePoint::getDate))
-                .collect(Collectors.toList()));
+            LocalDate rangeStartDate = accountValuePoint.getDate();
+            LocalDate rangeEndDate;
+            if (i < totalSeries.size() - 1) {
+                rangeEndDate = totalSeries.get(i + 1).getDate();
+            } else {
+                rangeEndDate = LocalDate.now().plusDays(1);
+            }
 
-        return result;
+            for (LocalDate date : rangeStartDate.datesUntil(rangeEndDate).toList()) {
+                totalsList.add(new AccountValuePoint(date, value));
+            }
+        }
+
+        accountValueMap.put("TOTAL", totalsList);
+
+        return accountValueMap;
     }
 }

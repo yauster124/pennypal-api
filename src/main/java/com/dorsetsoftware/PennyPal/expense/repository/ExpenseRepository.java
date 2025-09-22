@@ -18,11 +18,15 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("""
                 SELECT e FROM Expense e
                 WHERE e.user = :user
-                  AND (:startDate IS NULL OR e.date >= :startDate)
-                  AND (:endDate IS NULL OR e.date <= :endDate)
+                    AND (:searchQuery IS NULL OR LOWER(e.name) LIKE :searchQuery)
+                    AND (:categoryIds IS NULL OR e.category.id IN :categoryIds OR e.category.parent.id IN :categoryIds)
+                    AND (:startDate IS NULL OR e.date >= :startDate)
+                    AND (:endDate IS NULL OR e.date <= :endDate)
             """)
     Page<Expense> findByUserAndOptionalDateRange(
             @Param("user") User user,
+            @Param("searchQuery") String searchQuery,
+            @Param("categoryIds") List<Long> categoryIds,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable);

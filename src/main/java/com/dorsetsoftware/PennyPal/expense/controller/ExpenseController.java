@@ -39,10 +39,12 @@ public class ExpenseController {
     @GetMapping
     public Page<ExpenseDto> getExpenses(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) List<Long> categoryIds,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable) {
-        return expenseService.getExpenses(userDetails.getUsername(), startDate, endDate, pageable);
+        return expenseService.getExpenses(userDetails.getUsername(), searchQuery, categoryIds, startDate, endDate, pageable);
     }
 
     @GetMapping("/total")
