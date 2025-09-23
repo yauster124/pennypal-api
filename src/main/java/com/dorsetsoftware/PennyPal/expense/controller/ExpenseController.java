@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,11 +31,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/expenses")
 public class ExpenseController {
-    private final ExpenseService expenseService;
-
-    public ExpenseController(ExpenseService expenseService) {
-        this.expenseService = expenseService;
-    }
+    @Autowired
+    private ExpenseService expenseService;
 
     @GetMapping
     public Page<ExpenseDto> getExpenses(
@@ -81,7 +79,6 @@ public class ExpenseController {
     public ResponseEntity<ExpenseDto> createExpense(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ExpenseCreateDto dto) {
-        System.out.println(dto.getDate());
         return ResponseEntity.ok(expenseService.createExpense(dto, userDetails.getUsername()));
     }
 

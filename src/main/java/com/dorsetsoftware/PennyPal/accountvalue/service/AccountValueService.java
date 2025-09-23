@@ -55,8 +55,25 @@ public class AccountValueService {
         }
     }
 
+    @Transactional
+    public void updateAllSnapshots(Long userId, LocalDate date, BigDecimal amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Account> accounts = accountRepository.findByUser(user);
+
+        for (Account account : accounts) {
+            Optional<AccountValue> existing = accountValueRepository.findByAccountAndDate(account, date);
+            if (existing.isPresent()) {
+                BigDecimal currentValue = existing.get().getValue();
+                existing.get().setValue(currentValue.add(amount));
+            }
+        }
+    }
+
     public Map<String, List<AccountValuePoint>> getAccountValuesWithTotal(String username, LocalDate startDate) {
-        AccountValue earliestAccountValue = accountValueRepository.findFirstByAccountUserUsernameOrderByDateAsc(username);
+        AccountValue earliestAccountValue = accountValueRepository
+                .findFirstByAccountUserUsernameOrderByDateAsc(username);
         if (earliestAccountValue == null) {
             return new HashMap<>();
         }

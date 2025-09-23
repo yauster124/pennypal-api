@@ -174,13 +174,16 @@ public class ExpenseService {
         return ExpenseMapper.toDto(savedExpense);
     }
 
+    @Transactional
     public Boolean deleteExpense(Long expenseId) {
-        if (expenseRepository.existsById(expenseId)) {
-            expenseRepository.deleteById(expenseId);
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+        Account account = expense.getAccount();
+        account.updateBalance(expense.getAmount().negate());
+        accountValueService.updateAllSnapshots(expense.getUser().getId(), expense.getDate(), expense.getAmount().negate());
 
-            return true;
-        }
+        expenseRepository.deleteById(expenseId);
 
-        return false;
+        return true;
     }
 }
