@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferCreateDto;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferDto;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferUpdateDto;
@@ -37,6 +38,14 @@ public class TransferController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable) {
         return ResponseEntity.ok(transferService.getTransfers(userDetails.getUsername(), startDate, endDate, pageable));
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<TransferDto>> getRecentExpenses(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<TransferDto> transfers = transferService.getRecentTransfersForUser(userDetails.getUsername());
+
+        return ResponseEntity.ok(transfers);
     }
 
     @PostMapping

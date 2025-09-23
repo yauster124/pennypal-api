@@ -26,4 +26,8 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable);
+
+    List<Transfer> findTop5ByUserAndDateAfterOrderByDateDesc(
+            User user,
+            LocalDate startDate);
 }

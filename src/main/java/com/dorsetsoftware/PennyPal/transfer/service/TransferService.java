@@ -1,6 +1,7 @@
 package com.dorsetsoftware.PennyPal.transfer.service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dorsetsoftware.PennyPal.account.entity.Account;
 import com.dorsetsoftware.PennyPal.account.repository.AccountRepository;
 import com.dorsetsoftware.PennyPal.accountvalue.service.AccountValueService;
+import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
+import com.dorsetsoftware.PennyPal.expense.entity.Expense;
+import com.dorsetsoftware.PennyPal.expense.mapper.ExpenseMapper;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferCreateDto;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferDto;
 import com.dorsetsoftware.PennyPal.transfer.dto.TransferUpdateDto;
@@ -46,15 +50,26 @@ public class TransferService {
         return transfers.map(TransferMapper::toDto);
     }
 
+    public List<TransferDto> getRecentTransfersForUser(String username) {
+        User user = userRepository.findByUsername(username);
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        List<Transfer> transfers = transferRepository
+                .findTop5ByUserAndDateAfterOrderByDateDesc(user, thirtyDaysAgo);
+
+        return transfers.stream()
+                .map(TransferMapper::toDto)
+                .toList();
+    }
+
     @Transactional
     public TransferDto createTransfer(TransferCreateDto dto, String username) {
         User user = userRepository.findByUsername(username);
         Account accountFrom = accountRepository.findById(dto.getAccountFromId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-        accountFrom.setBalance(dto.getAmount().negate());
+        accountFrom.updateBalance(dto.getAmount().negate());
         Account accountTo = accountRepository.findById(dto.getAccountToId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-        accountTo.setBalance(dto.getAmount());
+        accountTo.updateBalance(dto.getAmount());
         accountValueService.snapshotAllAccounts(user.getId(), dto.getDate());
         Transfer transfer = new Transfer(dto.getAmount(), dto.getDate(), accountFrom, accountTo, user);
 
@@ -67,21 +82,21 @@ public class TransferService {
                 .orElseThrow(() -> new RuntimeException("Transfer not found"));
         
         if (dto.getAccountFromId() != transfer.getAccountFrom().getId()) {
-            transfer.getAccountFrom().setBalance(transfer.getAmount());
+            transfer.getAccountFrom().updateBalance(transfer.getAmount());
             Account newAccountFrom = accountRepository.findById(dto.getAccountFromId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-            newAccountFrom.setBalance(dto.getAmount().negate());
+            newAccountFrom.updateBalance(dto.getAmount().negate());
         } else if (transfer.getAmount().compareTo(dto.getAmount()) != 0) {
-            transfer.getAccountFrom().setBalance(transfer.getAmount().subtract(dto.getAmount()));
+            transfer.getAccountFrom().updateBalance(transfer.getAmount().subtract(dto.getAmount()));
         }
 
         if (dto.getAccountToId() != transfer.getAccountTo().getId()) {
-            transfer.getAccountTo().setBalance(transfer.getAmount().negate());
+            transfer.getAccountTo().updateBalance(transfer.getAmount().negate());
             Account newAccountTo = accountRepository.findById(dto.getAccountToId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-            newAccountTo.setBalance(dto.getAmount());
+            newAccountTo.updateBalance(dto.getAmount());
         } else if (transfer.getAmount().compareTo(dto.getAmount()) != 0) {
-            transfer.getAccountTo().setBalance(dto.getAmount().subtract(transfer.getAmount()));
+            transfer.getAccountTo().updateBalance(dto.getAmount().subtract(transfer.getAmount()));
         }
 
         accountValueService.snapshotAllAccounts(transfer.getUser().getId(), dto.getDate());
@@ -89,5 +104,9 @@ public class TransferService {
         transfer.setDate(dto.getDate());
 
         return TransferMapper.toDto(transfer);
+    }
+
+    public void consolidate() {
+        
     }
 }
