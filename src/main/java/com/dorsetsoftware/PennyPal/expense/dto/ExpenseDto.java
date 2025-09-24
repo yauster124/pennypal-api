@@ -3,7 +3,7 @@ package com.dorsetsoftware.PennyPal.expense.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.dorsetsoftware.PennyPal.account.dto.AccountDto;
+import com.dorsetsoftware.PennyPal.account.dto.AccountSummaryDto;
 import com.dorsetsoftware.PennyPal.category.dto.CategoryDto;
 
 public class ExpenseDto {
@@ -12,7 +12,7 @@ public class ExpenseDto {
     private BigDecimal amount;
     private LocalDate date;
     private CategoryDto category;
-    private AccountDto account;
+    private AccountSummaryDto account;
 
     public ExpenseDto() {}
 
@@ -56,11 +56,11 @@ public class ExpenseDto {
         this.category = category;
     }
 
-    public AccountDto getAccount() {
+    public AccountSummaryDto getAccount() {
         return account;
     }
 
-    public void setAccount(AccountDto account) {
+    public void setAccount(AccountSummaryDto account) {
         this.account = account;
     }
 }

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import com.dorsetsoftware.PennyPal.category.dto.CategoryExpenseSummaryDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseCreateDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseUpdateDto;
+import com.dorsetsoftware.PennyPal.expense.dto.TransferCreateDto;
 import com.dorsetsoftware.PennyPal.expense.service.ExpenseService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,7 +44,8 @@ public class ExpenseController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Pageable pageable) {
-        return expenseService.getExpenses(userDetails.getUsername(), searchQuery, categoryIds, startDate, endDate, pageable);
+        return expenseService.getExpenses(userDetails.getUsername(), searchQuery, categoryIds, startDate, endDate,
+                pageable);
     }
 
     @GetMapping("/total")
@@ -75,11 +78,25 @@ public class ExpenseController {
         return ResponseEntity.ok(totals);
     }
 
+    @GetMapping("/account-values")
+    public ResponseEntity<List<Map<String, Object>>> getAccountValues(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+        return ResponseEntity.ok(expenseService.getMultiAccountSeries(userDetails.getUsername(), startDate));
+    }
+
     @PostMapping
     public ResponseEntity<ExpenseDto> createExpense(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ExpenseCreateDto dto) {
         return ResponseEntity.ok(expenseService.createExpense(dto, userDetails.getUsername()));
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<ExpenseDto> createTransfer(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody TransferCreateDto dto) {
+        return ResponseEntity.ok(expenseService.createTransfer(dto, userDetails.getUsername()));
     }
 
     @PutMapping("/{expenseId}")

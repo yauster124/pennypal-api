@@ -12,8 +12,11 @@ public class ExpenseMapper {
         dto.setName(expense.getName());
         dto.setAmount(expense.getAmount());
         dto.setDate(expense.getDate());
-        dto.setCategory(CategoryMapper.toDto(expense.getCategory()));
-        dto.setAccount(AccountMapper.toDto(expense.getAccount()));
+
+        if (expense.getCategory() != null) {
+            dto.setCategory(CategoryMapper.toDto(expense.getCategory()));
+        }
+        dto.setAccount(AccountMapper.toSummaryDto(expense.getAccount()));
 
         return dto;
     }

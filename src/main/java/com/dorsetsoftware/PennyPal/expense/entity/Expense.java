@@ -5,10 +5,13 @@ import java.time.LocalDate;
 
 import com.dorsetsoftware.PennyPal.account.entity.Account;
 import com.dorsetsoftware.PennyPal.category.entity.Category;
+import com.dorsetsoftware.PennyPal.expense.model.ExpenseType;
 import com.dorsetsoftware.PennyPal.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,18 +42,22 @@ public class Expense {
     @JoinColumn(name = "account_id")
     private Account account;
 
+    @Enumerated(EnumType.STRING)
+    private ExpenseType type;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    protected Expense() {}
+    public Expense() {}
 
-    public Expense(String name, BigDecimal amount, LocalDate date, Category category, Account account, User user) {
+    public Expense(String name, BigDecimal amount, LocalDate date, Category category, Account account, ExpenseType type, User user) {
         this.name = name;
         this.amount = amount;
         this.date = date;
         this.category = category;
         this.account = account;
+        this.type = type;
         this.user = user;
     }
 
@@ -100,5 +107,9 @@ public class Expense {
 
     public User getUser() {
         return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

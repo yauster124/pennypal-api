@@ -1,7 +1,6 @@
 package com.dorsetsoftware.PennyPal.account.entity;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import com.dorsetsoftware.PennyPal.user.entity.User;
 
@@ -25,7 +24,7 @@ public class Account {
     private String name;
 
     @Column(precision = 19, scale = 2, nullable = false)
-    private BigDecimal balance;
+    private BigDecimal initialBalance;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
@@ -34,9 +33,9 @@ public class Account {
     public Account() {
     }
 
-    public Account(String name, BigDecimal balance, User user) {
+    public Account(String name, BigDecimal initialBalance, User user) {
         this.name = name;
-        this.balance = balance;
+        this.initialBalance = initialBalance;
         this.user = user;
     }
 
@@ -52,23 +51,15 @@ public class Account {
         this.name = name;
     }
 
-    public BigDecimal getBalance() {
-        return balance;
+    public BigDecimal getInitialBalance() {
+        return initialBalance;
     }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
+    public void setInitialBalance(BigDecimal initialBalance) {
+        this.initialBalance = initialBalance;
     }
 
     public User getUser() {
         return user;
-    }
-
-    public void updateBalance(BigDecimal amount) {
-        if (amount == null) {
-            throw new IllegalArgumentException("Amount cannot be null");
-        }
-        
-        this.balance = this.balance.add(amount).setScale(2, RoundingMode.HALF_UP);
     }
 }

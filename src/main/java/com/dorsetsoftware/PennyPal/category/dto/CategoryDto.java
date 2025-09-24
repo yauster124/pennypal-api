@@ -1,8 +1,11 @@
 package com.dorsetsoftware.PennyPal.category.dto;
 
+import com.dorsetsoftware.PennyPal.category.model.CategoryType;
+
 public class CategoryDto {
     private Long id;
     private String name;
+    private CategoryType type;
     private Long parentId;
 
     public CategoryDto() {}
@@ -21,6 +24,14 @@ public class CategoryDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public CategoryType getType() {
+        return type;
+    }
+
+    public void setCategoryType(CategoryType type) {
+        this.type = type;
     }
 
     public Long getParentId() {

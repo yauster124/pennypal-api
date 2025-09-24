@@ -1,11 +1,13 @@
 package com.dorsetsoftware.PennyPal.account.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.dorsetsoftware.PennyPal.account.dto.AccountCreateDto;
 import com.dorsetsoftware.PennyPal.account.dto.AccountDto;
+import com.dorsetsoftware.PennyPal.account.dto.AccountSummaryDto;
 import com.dorsetsoftware.PennyPal.account.entity.Account;
 import com.dorsetsoftware.PennyPal.account.mapper.AccountMapper;
 import com.dorsetsoftware.PennyPal.account.repository.AccountRepository;
@@ -27,18 +29,26 @@ public class AccountService {
         List<Account> accounts = accountRepository.findByUser(user);
 
         return accounts.stream()
-            .map(AccountMapper::toDto)
-            .toList();
+                .map(account -> {
+                    BigDecimal balance = getBalanceByAccount(account);
+                    return AccountMapper.toDto(account, balance);
+                })
+                .toList();
     }
 
-    public AccountDto createAccount(AccountCreateDto dto, String username) {
+    public AccountSummaryDto createAccount(AccountCreateDto dto, String username) {
         User user = userRepository.findByUsername(username);
         Account account = new Account(
-            dto.getName(),
-            dto.getBalance(),
-            user
-        );
+                dto.getName(),
+                dto.getBalance(),
+                user);
 
-        return AccountMapper.toDto(accountRepository.save(account));
+        return AccountMapper.toSummaryDto(accountRepository.save(account));
+    }
+
+    public BigDecimal getBalanceByAccount(Account account) {
+        BigDecimal txSum = accountRepository.sumByAccountId(account.getId());
+
+        return account.getInitialBalance().add(txSum != null ? txSum : BigDecimal.ZERO);
     }
 }

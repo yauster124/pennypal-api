@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dorsetsoftware.PennyPal.account.dto.AccountCreateDto;
 import com.dorsetsoftware.PennyPal.account.dto.AccountDto;
+import com.dorsetsoftware.PennyPal.account.dto.AccountSummaryDto;
 import com.dorsetsoftware.PennyPal.account.service.AccountService;
 
 @RestController
@@ -30,7 +31,7 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<AccountDto> createAccount(
+    public ResponseEntity<AccountSummaryDto> createAccount(
         @AuthenticationPrincipal UserDetails userDetails,
         @RequestBody AccountCreateDto dto
     ) {

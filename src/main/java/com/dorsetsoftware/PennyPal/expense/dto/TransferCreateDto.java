@@ -1,4 +1,4 @@
-package com.dorsetsoftware.PennyPal.transfer.dto;
+package com.dorsetsoftware.PennyPal.expense.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,7 +9,7 @@ public class TransferCreateDto {
     private Long accountFromId;
     private Long accountToId;
 
-    public TransferCreateDto() {
+    public TransferCreateDto(){
     }
 
     public BigDecimal getAmount() {
@@ -32,15 +32,15 @@ public class TransferCreateDto {
         return accountFromId;
     }
 
-    public void setAccountFromId(Long accountId) {
-        this.accountFromId = accountId;
+    public void setAccountFromId(Long accountFromId) {
+        this.accountFromId = accountFromId;
     }
 
     public Long getAccountToId() {
         return accountToId;
     }
 
-    public void setAccountToId(Long accountId) {
-        this.accountToId = accountId;
+    public void setAccountToId(Long accountToId) {
+        this.accountToId = accountToId;
     }
 }

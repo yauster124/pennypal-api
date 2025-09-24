@@ -3,7 +3,11 @@ package com.dorsetsoftware.PennyPal.category.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.dorsetsoftware.PennyPal.category.model.CategoryType;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,6 +24,9 @@ public class Category {
     private Long id;
 
     private String name;
+    
+    @Enumerated(EnumType.STRING)
+    private CategoryType type;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
@@ -45,6 +52,10 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public CategoryType getCategoryType() {
+        return type;
     }
 
     public Category getParent() {

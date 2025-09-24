@@ -9,11 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.dorsetsoftware.PennyPal.category.dto.CategoryExpenseSummaryDto;
+import com.dorsetsoftware.PennyPal.category.model.CategoryType;
 import com.dorsetsoftware.PennyPal.expense.entity.Expense;
 import com.dorsetsoftware.PennyPal.user.entity.User;
 
+@Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("""
                 SELECT e FROM Expense e
@@ -52,6 +55,18 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             LocalDate startDate);
 
     @Query("""
+                SELECT e FROM Expense e
+                WHERE e.account.id = :accountId
+                    AND (TRUE = :#{#startDate == null} OR e.date >= :startDate)
+                    AND (TRUE = :#{#endDate == null} OR e.date <= :endDate)
+                ORDER BY e.date ASC
+            """)
+    List<Expense> findByAccountIdAndOptionalDates(
+            @Param("accountId") Long accountId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    @Query("""
                 SELECT new com.dorsetsoftware.PennyPal.category.dto.CategoryExpenseSummaryDto(
                     COALESCE(parent.id, c.id),
                     COALESCE(parent.name, c.name),
@@ -63,12 +78,27 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
                 WHERE e.user = :user
                   AND e.date >= :startDate
                   AND e.account.id IN :accountIds
-                  AND (COALESCE(parent.id, c.id) <> 8)
+                  AND COALESCE(parent.type, c.type) = :categoryType
                 GROUP BY COALESCE(parent.id, c.id), COALESCE(parent.name, c.name)
                 HAVING SUM(e.amount) < 0
             """)
     List<CategoryExpenseSummaryDto> findRootCategoryTotalsForUserSinceAndAccountIds(
             @Param("user") User user,
             @Param("startDate") LocalDate startDate,
-            @Param("accountIds") List<Long> accountIds);
+            @Param("accountIds") List<Long> accountIds,
+            @Param("categoryType") CategoryType categoryType);
+
+    @Query("""
+            SELECT COALESCE(SUM(e.amount), 0) FROM Expense e
+            WHERE e.account.id = :accountId
+                AND (TRUE = :#{#startDate == null} or e.date < :startDate)
+                """)
+    BigDecimal sumAmountBeforeDate(@Param("accountId") Long accountId,
+            @Param("startDate") LocalDate startDate);
+
+    @Query("SELECT MIN(e.date) FROM Expense e WHERE e.account.id = :accountId")
+    LocalDate findEarliestDateForAccount(@Param("accountId") Long accountId);
+
+    @Query("SELECT MIN(e.date) FROM Expense e WHERE e.user.username = :username")
+    LocalDate findEarliestDateForUser(@Param("username") String username);
 }
