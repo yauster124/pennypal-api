@@ -37,6 +37,7 @@ import com.dorsetsoftware.PennyPal.expense.repository.ExpenseRepository;
 import com.dorsetsoftware.PennyPal.user.entity.User;
 import com.dorsetsoftware.PennyPal.user.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -51,6 +52,9 @@ public class ExpenseService {
     private UserRepository userRepository;
     @Autowired
     private AccountService accountService;
+
+    private final Long CATEGORY_TRANSFER_IN_ID = 53L;
+    private final Long CATEGORY_TRANSFER_OUT_ID = 54L;
 
     public Page<ExpenseDto> getExpenses(
             String username,
@@ -116,19 +120,27 @@ public class ExpenseService {
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
         Expense transferFrom = new Expense();
+        Category transferOut = categoryRepository.findById(CATEGORY_TRANSFER_OUT_ID)
+            .orElseThrow(() -> new EntityNotFoundException("Category not found"));;
         transferFrom.setName(String.format("%s to %s", accountFrom.getName(), accountTo.getName()));
         transferFrom.setAmount(dto.getAmount().negate());
         transferFrom.setDate(dto.getDate());
         transferFrom.setAccount(accountFrom);
         transferFrom.setUser(user);
+        transferFrom.setCategory(transferOut);
+        transferFrom.setType(ExpenseType.TRANSFER);
         expenseRepository.save(transferFrom);
 
         Expense transferTo = new Expense();
+        Category transferIn = categoryRepository.findById(CATEGORY_TRANSFER_IN_ID)
+            .orElseThrow(() -> new EntityNotFoundException("Category not found"));;
         transferTo.setName(String.format("%s to %s", accountFrom.getName(), accountTo.getName()));
         transferTo.setAmount(dto.getAmount());
         transferTo.setDate(dto.getDate());
         transferTo.setAccount(accountTo);
         transferTo.setUser(user);
+        transferTo.setCategory(transferIn);
+        transferTo.setType(ExpenseType.TRANSFER);
         Expense saved = expenseRepository.save(transferTo);
 
         return ExpenseMapper.toDto(saved);

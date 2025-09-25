@@ -79,6 +79,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
                   AND e.date >= :startDate
                   AND e.account.id IN :accountIds
                   AND COALESCE(parent.type, c.type) = :categoryType
+                  AND COALESCE(parent.id, c.id) <> 51
                 GROUP BY COALESCE(parent.id, c.id), COALESCE(parent.name, c.name)
                 HAVING SUM(e.amount) < 0
             """)

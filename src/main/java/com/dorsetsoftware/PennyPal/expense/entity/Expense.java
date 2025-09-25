@@ -105,6 +105,14 @@ public class Expense {
         this.account = account;
     }
 
+    public ExpenseType getType() {
+        return type;
+    }
+
+    public void setType(ExpenseType type) {
+        this.type = type;
+    }
+
     public User getUser() {
         return user;
     }
