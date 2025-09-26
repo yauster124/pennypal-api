@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import com.dorsetsoftware.PennyPal.account.entity.Account;
 import com.dorsetsoftware.PennyPal.user.entity.User;
-import com.dorsetsoftware.PennyPal.expense.entity.Expense;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
