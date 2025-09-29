@@ -27,6 +27,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private String profilePictureUrl;
+
+    private String alias;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Expense> tasks = new ArrayList<>();
 
@@ -55,5 +59,21 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getProfilePictureUrl() {
+        return this.profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }

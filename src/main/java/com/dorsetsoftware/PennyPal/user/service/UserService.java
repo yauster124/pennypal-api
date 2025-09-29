@@ -8,7 +8,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.dorsetsoftware.PennyPal.user.dto.UserDto;
 import com.dorsetsoftware.PennyPal.user.entity.User;
+import com.dorsetsoftware.PennyPal.user.mapper.UserMapper;
 import com.dorsetsoftware.PennyPal.user.repository.UserRepository;
 
 @Service
@@ -27,5 +29,14 @@ public class UserService  implements UserDetailsService {
                 user.getPassword(),
                 Collections.emptyList()
         );
+    }
+
+    public UserDto getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("User Not Found with username: " + username);
+        }
+        
+        return UserMapper.toDto(user);
     }
 }
