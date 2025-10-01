@@ -2,6 +2,7 @@ package com.dorsetsoftware.PennyPal.expense.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import com.dorsetsoftware.PennyPal.expense.dto.AccountBalanceDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseCreateDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseUpdateDto;
+import com.dorsetsoftware.PennyPal.expense.dto.MonthlyExpenseDto;
 import com.dorsetsoftware.PennyPal.expense.dto.TransferCreateDto;
 import com.dorsetsoftware.PennyPal.expense.entity.Expense;
 import com.dorsetsoftware.PennyPal.expense.mapper.ExpenseMapper;
@@ -119,7 +121,8 @@ public class ExpenseService {
 
         Expense transferFrom = new Expense();
         Category transferOut = categoryRepository.findById(CATEGORY_TRANSFER_OUT_ID)
-            .orElseThrow(() -> new EntityNotFoundException("Category not found"));;
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        ;
         transferFrom.setName(String.format("%s to %s", accountFrom.getName(), accountTo.getName()));
         transferFrom.setAmount(dto.getAmount().negate());
         transferFrom.setDate(dto.getDate());
@@ -131,7 +134,8 @@ public class ExpenseService {
 
         Expense transferTo = new Expense();
         Category transferIn = categoryRepository.findById(CATEGORY_TRANSFER_IN_ID)
-            .orElseThrow(() -> new EntityNotFoundException("Category not found"));;
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        ;
         transferTo.setName(String.format("%s to %s", accountFrom.getName(), accountTo.getName()));
         transferTo.setAmount(dto.getAmount());
         transferTo.setDate(dto.getDate());
@@ -305,4 +309,33 @@ public class ExpenseService {
         return series;
     }
 
+    public List<MonthlyExpenseDto> getMonthlyExpenses(LocalDate startDate) {
+        List<Object[]> results = expenseRepository.getMonthlyTotalsSince(startDate);
+
+        return results.stream()
+                .map(row -> {
+                    int year = (Integer) row[0];
+                    int month = (Integer) row[1];
+                    BigDecimal total = (BigDecimal) row[2];
+                    LocalDate monthDate = YearMonth.of(year, month).atDay(1);
+
+                    return new MonthlyExpenseDto(monthDate, total.abs());
+                })
+                .toList();
+    }
+
+    public List<MonthlyExpenseDto> getMonthlyIncome(LocalDate startDate) {
+        List<Object[]> results = expenseRepository.getMonthlyIncomeSince(startDate);
+
+        return results.stream()
+                .map(row -> {
+                    int year = (Integer) row[0];
+                    int month = (Integer) row[1];
+                    BigDecimal total = (BigDecimal) row[2];
+                    LocalDate monthDate = YearMonth.of(year, month).atDay(1);
+
+                    return new MonthlyExpenseDto(monthDate, total.abs());
+                })
+                .toList();
+    }
 }

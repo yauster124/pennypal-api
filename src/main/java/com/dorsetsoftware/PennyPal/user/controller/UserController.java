@@ -5,10 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dorsetsoftware.PennyPal.user.dto.UserDto;
+import com.dorsetsoftware.PennyPal.user.dto.UserProfileUpdateDto;
 import com.dorsetsoftware.PennyPal.user.service.UserService;
 
 @RestController
@@ -20,5 +23,13 @@ public class UserController {
     @GetMapping("/current")
     public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(userService.getUserByUsername(userDetails.getUsername()));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserDto> updateCurrentUserProfile(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody UserProfileUpdateDto dto
+    ) {
+        return ResponseEntity.ok(userService.updateCurrentUserProfile(userDetails.getUsername(), dto));
     }
 }

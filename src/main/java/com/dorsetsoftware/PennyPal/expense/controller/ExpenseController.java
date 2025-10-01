@@ -23,6 +23,7 @@ import com.dorsetsoftware.PennyPal.category.dto.CategoryExpenseSummaryDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseCreateDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseDto;
 import com.dorsetsoftware.PennyPal.expense.dto.ExpenseUpdateDto;
+import com.dorsetsoftware.PennyPal.expense.dto.MonthlyExpenseDto;
 import com.dorsetsoftware.PennyPal.expense.dto.TransferCreateDto;
 import com.dorsetsoftware.PennyPal.expense.service.ExpenseService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -109,5 +110,19 @@ public class ExpenseController {
     @DeleteMapping("/{expenseId}")
     public ResponseEntity<Boolean> deleteExpense(@PathVariable Long expenseId) {
         return ResponseEntity.ok(expenseService.deleteExpense(expenseId));
+    }
+
+    @GetMapping("/monthly-totals")
+    public ResponseEntity<List<MonthlyExpenseDto>> getMonthlyExpenses(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate
+    ) {
+        return ResponseEntity.ok(expenseService.getMonthlyExpenses(startDate));
+    }
+
+    @GetMapping("/monthly-income")
+    public ResponseEntity<List<MonthlyExpenseDto>> getMonthlyIncome(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate
+    ) {
+        return ResponseEntity.ok(expenseService.getMonthlyIncome(startDate));
     }
 }
